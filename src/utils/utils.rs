@@ -1,4 +1,4 @@
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, time::{SystemTime, UNIX_EPOCH}};
 use dotenv::dotenv;
 use lazy_static::lazy_static;
 use chrono::{Utc, Duration};
@@ -8,17 +8,14 @@ lazy_static! {
     static ref CRYPTO_MAP: HashMap<String, String> = {
         let mut map = HashMap::new();
         
-        // Bitcoin variants
         map.insert("btc".to_string(), "Bitcoin".to_string());
         map.insert("bitcoin".to_string(), "Bitcoin".to_string());
         map.insert("₿".to_string(), "Bitcoin".to_string());
         
-        // Ethereum variants
         map.insert("eth".to_string(), "Ethereum".to_string());
         map.insert("ethereum".to_string(), "Ethereum".to_string());
         map.insert("ether".to_string(), "Ethereum".to_string());
         
-        // Add more cryptocurrencies as needed
         map.insert("xrp".to_string(), "Ripple".to_string());
         map.insert("ripple".to_string(), "Ripple".to_string());
         
@@ -53,4 +50,12 @@ pub fn get_date_week_ago() -> String {
 
 pub fn sanitize_coin_input(coin_input:&str) -> Option<&String> {
     return CRYPTO_MAP.get(&coin_input.to_lowercase());
+}
+
+
+pub fn get_current_time_millis() -> u128{
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("Internal server error")
+        .as_millis()
 }

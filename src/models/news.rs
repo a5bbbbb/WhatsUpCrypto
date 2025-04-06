@@ -2,16 +2,6 @@
 use serde::{Deserialize, Serialize};
 
 
-#[derive(Deserialize,Debug)]
-pub struct News{
-    pub title:String,
-    pub source:String,
-    pub date:String,
-    pub summary:String,
-    pub link:String,
-}
-
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct NewsApiResponse {
     #[serde(skip_serializing)]

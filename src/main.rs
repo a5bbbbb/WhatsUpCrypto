@@ -6,15 +6,15 @@ mod utils;
 
 
 use axum::Router;
-use routes::news_route::news_routes;
+use routes::{home_route::home_routes, news_route::news_routes};
 
 #[tokio::main]
 async fn main() {
 
-    let app = Router::new().merge(news_routes());
+    let app = Router::new().merge(news_routes()).merge(home_routes());
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Listening on localhost:3000");
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:5000").await.unwrap();
+    println!("Listening on localhost:5000");
 
     axum::serve(listener, app).await.unwrap();
 }

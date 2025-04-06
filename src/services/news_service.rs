@@ -1,8 +1,9 @@
 use crate::{models::news::NewsApiResponse, utils};
 use reqwest::Error;
+use crate::utils::utils::get_date_week_ago;
 
 
-pub async fn fetch_data() -> Result<NewsApiResponse, Error> {
+pub async fn fetch_data(req: &String) -> Result<NewsApiResponse, Error> {
     let news_api_key: Option<String> = utils::utils::get_news_api_key()
         .into_iter()
         .next()
@@ -10,9 +11,8 @@ pub async fn fetch_data() -> Result<NewsApiResponse, Error> {
 
 
     let base_url: &str = "https://newsapi.org/v2/everything";
-    let from: &str = "2025-03-06";
-    let sort_by: &str = "publishedAt";
-    let req: &str = "tesla";
+    let from: String = get_date_week_ago();
+    let sort_by: &str = "popularity";
     let complete_url = match news_api_key {
         Some(val) => format!(
             "{}{}{}{}{}{}{}{}{}",

@@ -1,5 +1,30 @@
-use std::env;
+use std::{collections::HashMap, env};
 use dotenv::dotenv;
+use lazy_static::lazy_static;
+use chrono::{Utc, Duration};
+
+
+lazy_static! {
+    static ref CRYPTO_MAP: HashMap<String, String> = {
+        let mut map = HashMap::new();
+        
+        // Bitcoin variants
+        map.insert("btc".to_string(), "Bitcoin".to_string());
+        map.insert("bitcoin".to_string(), "Bitcoin".to_string());
+        map.insert("₿".to_string(), "Bitcoin".to_string());
+        
+        // Ethereum variants
+        map.insert("eth".to_string(), "Ethereum".to_string());
+        map.insert("ethereum".to_string(), "Ethereum".to_string());
+        map.insert("ether".to_string(), "Ethereum".to_string());
+        
+        // Add more cryptocurrencies as needed
+        map.insert("xrp".to_string(), "Ripple".to_string());
+        map.insert("ripple".to_string(), "Ripple".to_string());
+        
+        map
+    };
+}
 
 const NEWS_API: &str = "newsAPI";
 
@@ -17,4 +42,15 @@ pub fn get_news_api_key() -> Vec<Option<String>> {
     }
     
     return vec;
+}
+
+pub fn get_date_week_ago() -> String {
+    let today = Utc::now();
+    let week_ago = today - Duration::days(7);
+    week_ago.format("%Y-%m-%d").to_string()
+}
+
+
+pub fn sanitize_coin_input(coin_input:&str) -> Option<&String> {
+    return CRYPTO_MAP.get(&coin_input.to_lowercase());
 }

@@ -1,31 +1,50 @@
+use reqwest::header::{HeaderMap, HeaderValue, USER_AGENT, ACCEPT};
+
+
 use crate::{models::news::NewsApiResponse, utils};
-use reqwest::Error;
 use crate::utils::utils::get_date_week_ago;
 
 
-pub async fn fetch_data(req: &String) -> Result<NewsApiResponse, Error> {
+pub async fn fetch_data(req: &String) -> Result<NewsApiResponse, Box<dyn std::error::Error>> {
     let news_api_key: Option<String> = utils::utils::get_news_api_key()
         .into_iter()
         .next()
         .flatten();
 
-
-    let base_url: &str = "https://newsapi.org/v2/everything";
-    let from: String = get_date_week_ago();
-    let sort_by: &str = "popularity";
-    let complete_url = match news_api_key {
-        Some(val) => format!(
-            "{}{}{}{}{}{}{}{}{}",
-            base_url, "?q=", req, "&from=", from, "&sortBy=", sort_by, "&apiKey=", val
-        ),
-
-        None => base_url.to_string(),
+    let sort_by: String = "popularity".to_owned();
+    let api_key = match news_api_key {
+        Some(key) => key,
+        None => return Err("Failed to get API_KEY".into()),
     };
+    let from = get_date_week_ago();
 
-    let response = reqwest::get(&complete_url).await?;
-    
+
+    let mut headers = HeaderMap::new();
+    headers.insert(USER_AGENT, HeaderValue::from_static("Mozilla/5.0"));
+    headers.insert(ACCEPT, HeaderValue::from_static("text/html,application/xhtml+xml"));
+
+
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get("https://newsapi.org/v2/everything/")
+        .headers(headers)
+        .query(&[
+            ("q", req),
+            ("from", &from),
+            ("sortBy", &sort_by),
+            ("apiKey", &api_key),
+        ])
+        .send()
+        .await?;
+
+
+
+    println!("Response: {:#?}",response);
+
     let news: NewsApiResponse = response.json().await?;
-
+    println!("Successfully retrieved news");
+    
     Ok(news)
 
 }

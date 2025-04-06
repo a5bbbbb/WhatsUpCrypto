@@ -17,14 +17,14 @@ pub async fn get_crypto_news(Query(params): Query<HashMap<String, String>>) -> i
 
     let sanitized_coin:&String = match sanitize_coin_input(&coin) {
         Some(val) => val,
-        None => return Json(json!({"error": "You did not pass any coin!"})),
+        None => return Json(json!({"error": "You passed unknown symbol!"})),
     }; 
 
     match news_service::fetch_data(sanitized_coin).await {
         Ok(news) => Json(json!(news)),
         Err(err) => {
             println!("Error during fetch: {}",err);
-            return Json(json!({"error": "Failed to fetch news:"}));
+            return Json(json!({"error": format!("Failed to fetch news: {}", err)}));
         }
     }
 }

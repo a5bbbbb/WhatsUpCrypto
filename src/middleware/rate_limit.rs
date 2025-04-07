@@ -41,7 +41,7 @@ pub async fn rate_limit(
         }
         false => {
             println!("User is blocked");
-            Err((StatusCode::BAD_REQUEST, "You've reached the request limit, please try again later."))
+            Err((StatusCode::TOO_MANY_REQUESTS, "You've reached the request limit, please try again later."))
         },
     }
 }

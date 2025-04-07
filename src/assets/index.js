@@ -29,10 +29,12 @@ function search() {
  */
 async function handleErrors(res) {
     if(res.status >= 500) {
+        console.log("Server error.")
         throw new Error("Something is wrong with our server. " + (await res.json()).error)
     }
 
     if(res.status >= 400) {
+        console.log("Bad request.")
         throw new Error("Something is wrong with your requests. " + (await res.json()).error)
     }
 }

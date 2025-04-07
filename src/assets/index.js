@@ -4,39 +4,45 @@ document.getElementById("searchbar").addEventListener("keyup", function(event){
         search();
 })
 
-async function search() {
+function search() {
     let spinner = document.getElementById("loader");
 
     spinner.classList.toggle("invis");
-
 
     let query = document.getElementById("searchbar").value;
     if(!query)
         return;
 
-    try{
-        let res = await fetch("/news?coin=" + query);
+    fetch("/news?coin=" + query)
+    .then(async res => {
+        await handleErrors(res); 
+        return await res.json();
+    })
+    .then(data => updateList(data))
+    .catch(err => makeToast("Error", err.toString()))
+    .finally(() => spinner.classList.toggle("invis"));
+}
+/**
+ * 
+ * @param {Response} res 
+ * @returns 
+ */
+async function handleErrors(res) {
+    if(res.status >= 500) {
+        throw new Error("Something is wrong with our server. " + (await res.json()).error)
+    }
 
-        let data = await res.json();
-
-        updateList(data, spinner);
-    } catch(e) {
-        console.log(e);
+    if(res.status >= 400) {
+        throw new Error("Something is wrong with your requests. " + (await res.json()).error)
     }
 }
 
-function updateList(data, spinner) {
+function updateList(data) {
 
-    spinner.classList.toggle("invis");
     let cont = document.getElementById("cont");
     cont.innerHTML = "";
+    cont.innerHTML = `<h4>No article was found.</h4>`;
 
-    if(data.error){
-        cont.innerHTML = `<h4>No article was found.</h4>`;
-        return;
-    }
-
-    console.log(data, data.totalResults);
     let articlesHTML = `<h4>Found ${data.totalResults} article(s):</h4>`;
 
     for(let i = 0; i < data.totalResults; i++) {
@@ -59,4 +65,31 @@ function updateList(data, spinner) {
         `
     }
     cont.innerHTML = articlesHTML;
+}
+
+async function makeToast(subject, content, colorScheme){
+    if(!colorScheme) 
+        colorScheme = "text-bg-success";
+    if(subject == "Error")
+        colorScheme = "text-bg-danger";
+    const toastContainer = document.getElementById("toasts");
+    const toast = document.createElement("div");
+    toast.classList.add("toast");
+    toast.classList.add(colorScheme);
+    toast.setAttribute("role", "alert");
+    toast.setAttribute("aria-live", "assertive");
+    toast.setAttribute("aria-atomic", "true");
+    toast.innerHTML = `
+        <div class="toast-header">
+        <strong class="me-auto">${subject}</strong>
+        <small></small>
+        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+        ${content}
+        </div>
+    `;
+    toastContainer.appendChild(toast);
+    const toastBootstrap = bootstrap.Toast.getOrCreateInstance(toast);
+    toastBootstrap.show();
 }

@@ -38,7 +38,10 @@ pub async fn rate_limit(
             let response = next.run(req).await;
             Ok(response)
         }
-        false => Err((StatusCode::BAD_REQUEST, "You've reached the request limit, please try again later.")),
+        false => {
+            println!("User is blocked");
+            Err((StatusCode::BAD_REQUEST, "You've reached the request limit, please try again later."))
+        },
     }
 }
 

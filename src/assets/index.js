@@ -5,6 +5,11 @@ document.getElementById("searchbar").addEventListener("keyup", function(event){
 })
 
 async function search() {
+    let spinner = document.getElementById("loader");
+
+    spinner.classList.toggle("invis");
+
+
     let query = document.getElementById("searchbar").value;
     if(!query)
         return;
@@ -14,13 +19,15 @@ async function search() {
 
         let data = await res.json();
 
-        updateList(data);
+        updateList(data, spinner);
     } catch(e) {
         console.log(e);
     }
 }
 
-function updateList(data) {
+function updateList(data, spinner) {
+
+    spinner.classList.toggle("invis");
     let cont = document.getElementById("cont");
     cont.innerHTML = "";
 

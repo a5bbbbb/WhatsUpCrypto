@@ -23,19 +23,32 @@ function search() {
     .finally(() => spinner.classList.toggle("invis"));
 }
 /**
- * 
+ * Handler of errors for queries to the server.
  * @param {Response} res 
- * @returns 
+ * @throws for 4xx and 5xx responses with message in Error object. 
  */
 async function handleErrors(res) {
+
+    let copy = res.clone();
+
+    if(res.status == 400) {
+        console.log("Bad request. 400 bad request");
+        throw new Error((await res.json()).error || (await copy.text()));
+    }
+
+    if(res.status == 429) {
+        console.log("Rate limit exceeded. 429 too many requests");
+        throw new Error("You submit requests too often. Please try again in few minutes.");
+    }
+
     if(res.status >= 500) {
-        console.log("Server error.")
-        throw new Error("Something is wrong with our server. " + (await res.json()).error)
+        console.log("Server error.");
+        throw new Error("Something is wrong with our server. " + (await res.text()).error);
     }
 
     if(res.status >= 400) {
-        console.log("Bad request.")
-        throw new Error("Something is wrong with your requests. " + (await res.json()).error)
+        console.log("Bad request. 4xx code.");
+        throw new Error("Something is wrong with your requests. " + (await res.text()).error);
     }
 }
 
@@ -81,6 +94,7 @@ async function makeToast(subject, content, colorScheme){
     toast.setAttribute("role", "alert");
     toast.setAttribute("aria-live", "assertive");
     toast.setAttribute("aria-atomic", "true");
+    toast.classList.add("my-2");
     toast.innerHTML = `
         <div class="toast-header">
         <strong class="me-auto">${subject}</strong>

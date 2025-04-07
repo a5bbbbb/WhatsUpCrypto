@@ -10,18 +10,19 @@ lazy_static! {
 }
 
 const MAX_REQ: u32 = 10;
+const ONE_MINUTE_SPAN: u128 = 60_000;
 
 #[derive(Debug)]
 struct RequestInfo{
     request_count: u32,
     block_time: Option<u128>,
+    first_request_time: Option<u128>,
 }
 
 pub async fn rate_limit(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     req: Request,
     next: Next) -> Result<Response, (StatusCode, &'static str)> {
-
 
     let ip = addr.ip().to_string();
 
@@ -33,7 +34,7 @@ pub async fn rate_limit(
     let user_req_id = format!("{}_{}", ip, user_agent);
 
 
-    match is_allowed_to_proceed(user_req_id) {
+    match should_allow_request(user_req_id) {
         true => {
             let response = next.run(req).await;
             Ok(response)
@@ -45,40 +46,50 @@ pub async fn rate_limit(
     }
 }
 
-fn is_allowed_to_proceed(user_req_id:String) -> bool{
+fn should_allow_request(user_req_id:String) -> bool{
+
+    let now = get_current_time_millis();
+
     let mut map = MAP.lock().unwrap();
 
-    let mut user_counter: u32 = match map.get(&user_req_id) {
+
+    match map.get_mut(&user_req_id) {
         Some(val) => {
-            if val.block_time != None && get_current_time_millis() <= val.block_time.unwrap() {
+            if val.block_time.is_some() && now <= val.block_time.unwrap() {
                 return false;
             }
-            val.request_count + 1
+
+            if now - val.first_request_time.unwrap() <= ONE_MINUTE_SPAN {
+                val.request_count += 1;
+            }
+            else {
+                val.request_count = 1;
+                val.first_request_time = Some( now );
+            }
+
+            val.block_time = eval_block_time(val.request_count, now);
+
+            return val.block_time.is_none()
+
         },
         None => { 
-            map.insert(user_req_id, RequestInfo{ request_count: 1, block_time: None});
+            map.insert(user_req_id, RequestInfo{ 
+                request_count: 1,
+                block_time: None,
+                first_request_time: Some(now)
+            });
+
             return true;
         },
-        
-    };
-
-
-    let user_block_time = eval_block_time(user_counter);
-
-    if user_block_time != None {
-        user_counter = 0;
     }
 
-    map.insert(user_req_id, RequestInfo{ request_count: user_counter,block_time: user_block_time});
-
-    return user_block_time == None;
 }
 
-fn eval_block_time(request_count: u32) -> Option<u128> {
+fn eval_block_time(request_count: u32, now: u128) -> Option<u128> {
 
     if request_count > MAX_REQ {
         return Some(
-            get_current_time_millis() + 60000 //1 min into the future
+            now + ONE_MINUTE_SPAN
         );
     }
 

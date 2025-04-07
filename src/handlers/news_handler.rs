@@ -20,7 +20,7 @@ pub async fn get_crypto_news(Query(params): Query<HashMap<String, String>>) -> (
         None => return (StatusCode::BAD_REQUEST, Json(json!({"error": "You passed unknown symbol!"}))),
     }; 
 
-    match news_service::fetch_data(sanitized_coin).await {
+    match news_service::fetch_combined_news(sanitized_coin).await {
         Ok(news) => (StatusCode::OK, Json(json!(news))),
         Err(err) => {
             println!("Error during fetch: {}",err);
@@ -28,5 +28,3 @@ pub async fn get_crypto_news(Query(params): Query<HashMap<String, String>>) -> (
         }
     }
 }
-
-

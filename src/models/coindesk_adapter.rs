@@ -82,19 +82,22 @@ pub fn adapt_coindesk_to_news_api(coindesk_response: CoinDeskResponse) -> NewsAp
             };
             let iso_date = timestamp.to_rfc3339();
             
-            let description = cd_article.subtitle.or_else(|| {
-                if cd_article.body.len() > 150 {
-                    Some(format!("{}...", &cd_article.body[0..150]))
+            let description = cd_article.subtitle.clone().or_else(|| {
+                Some(if cd_article.body.chars().count() > 150 {
+                    format!("{}...", cd_article.body.chars().take(150).collect::<String>())
                 } else {
-                    Some(cd_article.body.clone())
-                }
-            });
+                    cd_article.body.clone()
+                })
+            });            
             
-            let content = if cd_article.body.len() > 300 {
-                Some(format!("{}...", &cd_article.body[0..300]))
-            } else {
-                Some(cd_article.body)
-            };
+            let content = Some(
+                if cd_article.body.chars().count() > 300 {
+                    format!("{}...", cd_article.body.chars().take(300).collect::<String>())
+                } else {
+                    cd_article.body.clone()
+                }
+            );
+            
             
             Article {
                 source: Source {

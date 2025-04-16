@@ -82,7 +82,7 @@ pub fn adapt_coindesk_to_news_api(coindesk_response: CoinDeskResponse) -> NewsAp
             };
             let iso_date = timestamp.to_rfc3339();
             
-            let description = cd_article.subtitle.clone().or_else(|| {
+            let description = cd_article.subtitle.or_else(|| {
                 Some(if cd_article.body.chars().count() > 150 {
                     format!("{}...", cd_article.body.chars().take(150).collect::<String>())
                 } else {
